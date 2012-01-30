@@ -120,10 +120,7 @@ class Backbone.SharedCollection extends Backbone.Collection
   _bindSendOperations: ->
 
     @bind "change", (model) =>
-      if model._syncOk
-        @_sendModelChange model
-      else
-        log "Model '#{ model.id }' is not in sync machinery yet. Skipping change event"
+      @_sendModelChange model
 
     @bind "add", (model) =>
       @_sendModelAdd model
@@ -155,6 +152,10 @@ class Backbone.SharedCollection extends Backbone.Collection
     if @_syncAdded is model.id
       # We received this add. No need to resend it
       @_syncAdded = null
+      return
+
+    # Just ignore readds
+    if @_syncDoc.snapshot[this.collectionId][model.id]
       return
 
     log "SEND ADD #{ model.id }: #{ JSON.stringify model.toJSON() }"
@@ -247,26 +248,18 @@ class Backbone.SharedCollection extends Backbone.Collection
     model.set @_syncAttributes
 
 
-  _sharedAdd: (model) ->
-    # TODO: can we add models to the sharejs document here?
-    model._syncOk = true
-    # model.destroy = Backbone.SharedModel::destroy
-    # model.save = Backbone.SharedModel::save
-
-
-  # Collection#add can trigger change events. We must flag models so that the
-  # changes won't get sent to the sharejs document before it's added to it
   add: (models) ->
     if models.length is 0
       return
 
-    super
 
     if _.isArray models
       for m in models
-        @_sharedAdd m
+        @_sendModelAdd m
     else
-      @_sharedAdd models
+      @_sendModelAdd models
+
+    super
 
     return this
 
