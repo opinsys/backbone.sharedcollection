@@ -41,6 +41,10 @@ class Backbone.SharedCollection extends Backbone.Collection
     @_syncAttributes = {}
     super
 
+  handleError: (model) => (err) =>
+    if err
+      log "Sync error!", err
+      @trigger "sharejserror", err, model
 
   create: (model, options={}) ->
 
@@ -143,8 +147,8 @@ class Backbone.SharedCollection extends Backbone.Collection
     if not @_syncDoc.snapshot[@collectionId][model.id]
       log "ERROR: snapshot has no this model #{ model.id }"
 
-
-    @_syncDoc.submitOp operations if operations.length isnt 0
+    if operations.length isnt 0
+      @_syncDoc.submitOp operations, @handleError(model)
 
 
   _sendModelAdd: (model) ->
@@ -158,10 +162,10 @@ class Backbone.SharedCollection extends Backbone.Collection
     @_syncDoc.submitOp [
       p: [@collectionId , model.id]
       oi: model.toJSON()
-    ]
+    ], @handleError(model)
 
 
-  _sendModelDestroy: (model, options) ->
+  _sendModelDestroy: (model) ->
 
     if @_syncRemoved is model.id
       # We received this remove. No need to send it again
@@ -172,8 +176,7 @@ class Backbone.SharedCollection extends Backbone.Collection
     @_syncDoc.submitOp [
       p: [@collectionId , model.id]
       od: true
-    ], (err) =>
-      debugger
+    ], @handleError(model)
 
 
 
