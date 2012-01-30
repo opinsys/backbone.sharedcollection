@@ -1,0 +1,10 @@
+{
+    "name" : "shared-todos-example"
+    , "version": "0.1.0"
+    , "author": "Esa-Matti Suuronen"
+    , "homepage": "https://github.com/opinsys/backbone.sharedcollection"
+    , "dependencies": {
+        "share": ""
+        , "express": ""
+    }
+}
