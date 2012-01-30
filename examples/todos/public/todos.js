@@ -32,13 +32,11 @@ $(function(){
 
   // The collection of todos is backed by *localStorage* instead of a remote
   // server.
-  window.TodoList = Backbone.Collection.extend({
+  window.TodoList = Backbone.SharedCollection.extend({
 
     // Reference to this collection's model.
     model: Todo,
 
-    // Save all of the todo items under the `"todos"` namespace.
-    localStorage: new Store("todos"),
 
     // Filter down the list of all todo items that are finished.
     done: function() {
@@ -65,7 +63,9 @@ $(function(){
   });
 
   // Create our global collection of **Todos**.
-  window.Todos = new TodoList;
+  window.Todos = new TodoList([], {
+    collectionId: "todolist"
+  });
 
   // Todo Item View
   // --------------
@@ -165,7 +165,7 @@ $(function(){
 
     // At initialization we bind to the relevant events on the `Todos`
     // collection, when items are added or changed. Kick things off by
-    // loading any preexisting todos that might be saved in *localStorage*.
+    // loading any preexisting todos that might be saved in *shareJS*.
     initialize: function() {
       this.input    = this.$("#new-todo");
 
@@ -173,7 +173,10 @@ $(function(){
       Todos.bind('reset', this.addAll, this);
       Todos.bind('all',   this.render, this);
 
-      Todos.fetch();
+      sharejs.open('todos', 'json', function(err, doc) {
+        if (err) throw err;
+        Todos.fetch({ sharejsDoc: doc });
+      });
     },
 
     // Re-rendering the App just means refreshing the statistics -- the rest
