@@ -6,42 +6,73 @@ log = (msg...) ->
 S4 = -> (((1 + Math.random()) * 65536) | 0).toString(16).substring(1)
 
 
+# Convert Backone.js style options object based callbacks to Node.js style
+# single function callbacks used in ShareJS
+optionsCbToNodeCb = (options) -> (err) ->
+  if err
+    options?.error?()
+  else
+    options?.success?()
+
+
+Backbone.sync = (method, model, options) ->
+  console.log "METHOD", method
+
+  # Call options.success() callback to trigger destroy event which triggers
+  # synchronization to other browsers.
+  if method is "delete"
+    options.success()
+
 class Backbone.SharedCollection extends Backbone.Collection
+
+  model: Backbone.SharedModel
 
   @generateGUID = ->
     S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4()
 
-  constructor: (models, opts) ->
+  constructor: (models, opts={}) ->
     @modelTypes = opts.modelTypes or {}
+    if opts.sharejsDoc
+      @_syncDoc = opts.sharejsDoc
+
     if not @collectionId = opts.collectionId
       throw new Error "SharedCollection needs a collectionId in options!"
 
+    @_syncAttributes = {}
     super
 
-  _initModel: (json) ->
-    Model = @modelTypes[json.type]
 
-    if not Model
-      log "DEBUG: no custom model found for type '#{ json.type }' id: #{ json.id }"
-      Model = Backbone.Model
+  create: (model, options={}) ->
 
-    if not json.id
-      log "DEBUG: User did not give an id. generating one"
-      json.id = SharedCollection.generateGUID
+    if not (model instanceof Backbone.Model)
+      attrs = model
+      Model = @modelTypes[attrs.type] or @model
+      model = new Model attrs,
+        collection: this
+      if model.validate and not model._performValidation(attrs, options)
+        return false
 
-    @add new Model json
+    if not model.collection
+      model.collection = this
 
-  _setConnected: ->
-    return if @connected
-    @connected = true
-    @trigger "connect", this
+    if not model.id
+      model.set id: SharedCollection.generateGUID()
 
-  connect: (sharejsDoc, cb=->) ->
-    @_syncDoc = sharejsDoc
-    @_syncAttributes = {}
+    @add model, options
+    return model
 
 
-    if @_syncDoc.created and not @_syncDoc._bb_collection_inited
+  fetch: (options={}) ->
+
+    if options.sharejsDoc
+      @_syncDoc = options.sharejsDoc
+
+    if @_syncDoc.type.name isnt "json"
+      throw new Error "The ShareJS document type must be 'json', not '#{ @_syncDoc.type.name }'"
+
+    cb = optionsCbToNodeCb options
+
+    if @_syncDoc.created
       @_initSyncDoc cb
     else
       @_loadModelsFromSyncDoc cb
@@ -56,7 +87,7 @@ class Backbone.SharedCollection extends Backbone.Collection
         # If first part in operation path is @collectionId this operation is a
         # change to some of our models
         if op.p[0] is @collectionId
-          @_receiveModelOperation op
+          @parse op
 
 
   _initSyncDoc: (cb) ->
@@ -66,26 +97,19 @@ class Backbone.SharedCollection extends Backbone.Collection
     @_syncDoc.submitOp [
       p: []
       oi: ob
-    ], =>
-      @_syncDoc._bb_collection_inited = true
-      @_setConnected()
-      cb()
+    ], cb
 
-  _loadModelsFromSyncDoc: (cb) ->
-
+  _loadModelsFromSyncDoc: (cb=->) ->
     if modelMap = @_syncDoc.snapshot[@collectionId]
-      @_setConnected()
       for id, json of modelMap
-        @_initModel json
+        @create json
       cb()
     else
       log "Creating collection #{ @collectionId }"
       @_syncDoc.submitOp [
         p: [@collectionId]
         oi: {}
-      ], =>
-        @_setConnected()
-        cb()
+      ], cb
 
 
 
@@ -100,7 +124,7 @@ class Backbone.SharedCollection extends Backbone.Collection
     @bind "add", (model) =>
       @_sendModelAdd model
 
-    @bind "destroy", (model) =>
+    @bind "destroy", (model, options) =>
       @_sendModelDestroy model
 
 
@@ -137,7 +161,7 @@ class Backbone.SharedCollection extends Backbone.Collection
     ]
 
 
-  _sendModelDestroy: (model) ->
+  _sendModelDestroy: (model, options) ->
 
     if @_syncRemoved is model.id
       # We received this remove. No need to send it again
@@ -148,13 +172,14 @@ class Backbone.SharedCollection extends Backbone.Collection
     @_syncDoc.submitOp [
       p: [@collectionId , model.id]
       od: true
-    ]
+    ], (err) =>
+      debugger
 
 
 
-  _receiveModelOperation: (op) ->
+  parse: (op) ->
 
-    # If path has form of [ @collectionId , modelId ] it must be add or remove 
+    # If path has form of [ @collectionId , modelId ] it must be add or remove
     if op.p.length is 2
 
       # We have insert object
@@ -179,7 +204,7 @@ class Backbone.SharedCollection extends Backbone.Collection
     log "RECEIVE ADD #{ op.oi.id }: #{ JSON.stringify op.oi }"
 
     @_syncAdded = op.oi.id
-    @_initModel op.oi
+    @create op.oi
 
 
   _receiveModelDestroy: (op) ->
@@ -219,24 +244,26 @@ class Backbone.SharedCollection extends Backbone.Collection
     model.set @_syncAttributes
 
 
+  _sharedAdd: (model) ->
+    # TODO: can we add models to the sharejs document here?
+    model._syncOk = true
+    # model.destroy = Backbone.SharedModel::destroy
+    # model.save = Backbone.SharedModel::save
+
+
   # Collection#add can trigger change events. We must flag models so that the
   # changes won't get sent to the sharejs document before it's added to it
   add: (models) ->
     if models.length is 0
       return
 
-    # TODO: Should we just queue adds and add them when connected?
-    if not @connected
-      throw new Error "SharedCollection must be connected to ShareJS document before models can be added to it!"
-
     super
 
-    # TODO: can we add models to the sharejs document here?
     if _.isArray models
       for m in models
-        m._syncOk = true
+        @_sharedAdd m
     else
-      models._syncOk = true
+      @_sharedAdd models
 
     return this
 
