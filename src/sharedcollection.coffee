@@ -141,7 +141,7 @@ class Backbone.SharedCollection extends Backbone.Collection
 
 
     if not @_syncDoc.snapshot[@collectionId][model.id]
-      log "ERROR: snapshot has no this model #{ model.id }"
+      throw new Error  "ERROR: snapshot has no model with id #{ model.id }"
 
     if operations.length isnt 0
       @_syncDoc.submitOp operations, @handleError(model)
@@ -211,8 +211,7 @@ class Backbone.SharedCollection extends Backbone.Collection
 
     model = @get modelId
     if not model
-      log "ERROR: Remote asked to remove non existing model #{ modelId }"
-      return
+      throw new Error "Remote asked to remove non existing model #{ modelId }"
 
     log "RECEIVE REMOVE #{ model.id }: #{ JSON.stringify modelId }"
 
@@ -231,8 +230,7 @@ class Backbone.SharedCollection extends Backbone.Collection
 
     model = @get modelId
     if not model
-      log "ERROR: Remote asked to update non existing model: #{ model.id } #{ modelId }"
-      return
+      throw new Error "Remote asked to update non existing model: #{ model.id } #{ modelId }"
 
     log "RECEIVE CHANGE #{ model.id }: #{ attrName }: #{ attrValue }"
 
