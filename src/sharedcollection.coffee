@@ -58,8 +58,6 @@ class Backbone.SharedCollection extends Backbone.Collection
     if not model.collection
       model.collection = this
 
-    if not model.id
-      model.set id: SharedCollection.generateGUID()
 
     @add model, options
     return model
@@ -150,6 +148,11 @@ class Backbone.SharedCollection extends Backbone.Collection
 
 
   _sendModelAdd: (model) ->
+
+    # Models in shared collection must have unique id. Create one if user did
+    # not give one.
+    if not model.id
+      model.set id: SharedCollection.generateGUID()
 
     # Just ignore readds
     if @_syncDoc.snapshot[this.collectionId][model.id]
