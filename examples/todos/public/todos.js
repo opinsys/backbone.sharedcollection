@@ -1,7 +1,7 @@
-// An example Backbone application contributed by
-// [Jérôme Gravel-Niquet](http://jgn.me/). This demo uses a simple
-// [LocalStorage adapter](backbone-localstorage.html)
-// to persist Backbone models within your browser.
+// An example Backbone application contributed originally by
+// [Jérôme Gravel-Niquet](http://jgn.me/) for Backbone.js.
+// This demo used orginally [LocalStorage adapter](backbone-localstorage.html)
+// but this versio is converted to use [Backbone.SharedCollection](https://github.com/opinsys/backbone.sharedcollection/).
 
 // Load the application once the DOM is ready, using `jQuery.ready`:
 $(function(){
