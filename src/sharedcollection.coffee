@@ -57,7 +57,7 @@ class Backbone.SharedCollection extends Backbone.Collection
 
     if not (model instanceof Backbone.Model)
       attrs = model
-      Model = @classMap[attrs.type] or @model
+      Model = @classMap[attrs.__type] or @model
       model = new Model attrs,
         collection: this
       if model.validate and not model._performValidation(attrs, options)
@@ -155,7 +155,7 @@ class Backbone.SharedCollection extends Backbone.Collection
       @_syncDoc.submitOp operations, @captureError(model, "change")
 
 
-  _sendModelAdd: (model) ->
+  _sendModelAdd: (model, options) ->
 
     # Models in shared collection must have unique id. Create one if user did
     # not give one.
@@ -167,6 +167,15 @@ class Backbone.SharedCollection extends Backbone.Collection
       return
 
     log "SEND ADD #{ model.id }: #{ JSON.stringify model.toJSON() }"
+
+    attrs = model.toJSON()
+
+    # If model has type property we must put it with serialized attributes so
+    # that it can be properly deserialized in the other end.
+    if model.type
+      if not @classMap[model.type]
+        throw new Error "Cannot serialize model. Unkown type: '#{ model.type }'. You must add this model class to `modelClasses` options when creating this collection"
+      attrs.__type = model.type
 
     @_syncDoc.submitOp [
       p: [@collectionId , model.id]
