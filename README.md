@@ -44,7 +44,7 @@ sharejs.attach(app, {
 For persistence options see [ShareJS documentation](https://github.com/josephg/ShareJS).
 
 In addition to Backbone.js you need also ShareJS and it's
-dependencies, Socket.io, added to your app
+dependencies, Socket.io, added to your app:
 
 ```html
 <!-- Socket.io and ShareJS served directly from Node.js server -->
@@ -61,7 +61,8 @@ dependencies, Socket.io, added to your app
 <script src="backbone.sharedcollection.js"></script>
 ```
 
-For fully working app see [examples/todos](https://github.com/opinsys/backbone.sharedcollection/tree/master/examples/todos)
+For fully working app see
+[examples/todos](https://github.com/opinsys/backbone.sharedcollection/tree/master/examples/todos).
 
 ## Usage
 
@@ -98,7 +99,7 @@ Then you can just start adding models to your collection
 ```javascript
 function initCallback() {
     model = new Backbone.Model;
-    collection.add model;
+    collection.add(model);
 }
 ```
 
@@ -199,13 +200,13 @@ collection.bind("syncerror", function(model, method, err) {
 
 ### Authentication
 
-See [User access controll](https://github.com/josephg/ShareJS/wiki/User-access-control)
+See [User access control](https://github.com/josephg/ShareJS/wiki/User-access-control)
 wiki page in ShareJS documention.
 
 
 ## Hacking and debugging
 
-Add set `debugSharedCollection` in `localStorage` to true to enable logging.
+Set `debugSharedCollection` in `localStorage` to true to enable logging.
 
 Install CoffeeScript and UglifyJS to build plain Javascript versions.
 
