@@ -115,7 +115,13 @@ model.set({ foo: "bar local only" }, { local: true });
 
 Custom models in collection works just like Backbone.js documentation
 [states](http://documentcloud.github.com/backbone/#Collection-model). Just
-override `model` property with your custom Model class.
+override `model` property in the collection with your custom Model class.
+
+```javascript
+var Library = Backbone.SharedCollection.extend({
+    model: Book
+});
+```
 
 If you want to have have multiple different Models in single SharedCollection,
 then you must do a small modification to your models. Set the type property of
