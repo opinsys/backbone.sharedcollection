@@ -2,7 +2,7 @@ fs = require "fs"
 {exec} = require "child_process"
 
 
-src = "src/sharedcollection.coffee"
+src = "src/backbone.sharedcollection.coffee"
 
 build = ->
   coffee = exec "coffee -c -o . #{ src }"
