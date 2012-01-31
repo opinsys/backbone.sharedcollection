@@ -51,7 +51,7 @@ class Backbone.SharedCollection extends Backbone.Collection
   captureError: (model, method) => (err) =>
     if err
       log "Sync error!", err
-      @trigger "sharejserror", err, model
+      @trigger "syncerror", model, method, err
 
   create: (model, options={}) ->
 
