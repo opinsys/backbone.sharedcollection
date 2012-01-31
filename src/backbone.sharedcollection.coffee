@@ -10,18 +10,9 @@ else
 
 S4 = -> (((1 + Math.random()) * 65536) | 0).toString(16).substring(1)
 
-# Convert Backone.js style options object based callbacks to Node.js style
-# single function callbacks used in ShareJS
-optionsCbToNodeCb = (options) -> (err) ->
-  if err
-    options?.error?()
-  else
-    options?.success?()
 
 
 Backbone.sync = (method, model, options) ->
-  console.log "METHOD", method
-
   # Call options.success() callback to trigger destroy event which triggers
   # synchronization to other browsers.
   if method is "delete"
@@ -39,6 +30,8 @@ class Backbone.SharedCollection extends Backbone.Collection
   constructor: (models, opts={}) ->
     @classMap = {}
     @mapTypes opts.modelClasses if opts.modelClasses
+
+    @_addingQueue = []
 
     if opts.sharejsDoc
       @_syncDoc = opts.sharejsDoc
@@ -78,12 +71,24 @@ class Backbone.SharedCollection extends Backbone.Collection
     if not model.collection
       model.collection = this
 
-
     @add model, options
     return model
 
-
   fetch: (options={}) ->
+    # Fetch can be called only once
+    if @fetched
+      return cb()
+    @fetched = true
+
+    # Convert Backbone.js style object callback to Node.js style callback
+    callbackWrapper = (err) =>
+      if err
+        options?.error? err
+      else
+        @connected = true
+        @_flushAddingQueue()
+        @trigger "connect", this
+        options?.success?()
 
     if options.sharejsDoc
       @_syncDoc = options.sharejsDoc
@@ -91,14 +96,14 @@ class Backbone.SharedCollection extends Backbone.Collection
     if @_syncDoc.type.name isnt "json"
       throw new Error "The ShareJS document type must be 'json', not '#{ @_syncDoc.type.name }'"
 
-    cb = optionsCbToNodeCb options
 
     if @_syncDoc.created
-      @_initSyncDoc cb
+      @_initSyncDoc callbackWrapper
     else
-      @_loadModelsFromSyncDoc cb
+      @_loadModelsFromSyncDoc callbackWrapper
 
     @_bindSendOperations()
+
 
 
     # And also bind receive operations:
@@ -110,6 +115,11 @@ class Backbone.SharedCollection extends Backbone.Collection
         if op.p[0] is @collectionId
           @parse op
 
+
+  _flushAddingQueue: ->
+    while model = @_addingQueue.shift()
+      console.log "removing #{ model.get "name" } from queue"
+      @add model
 
   _initSyncDoc: (cb) ->
     log "Creating new sync doc with #{ @collectionId }"
@@ -275,14 +285,22 @@ class Backbone.SharedCollection extends Backbone.Collection
 
 
   add: (models, options) ->
-    if models.length is 0
+
+    if not models or models.length is 0
       return this
 
-    if _.isArray models
-      for m in models
-        @_sendModelAdd m, options
-    else
-      @_sendModelAdd models, options
+    if not _.isArray models
+      models = [ models ]
+
+    if not @fetched
+      while model = models.shift()
+        debugger
+        console.log "Adding #{ model.get "name" } to queue"
+        @_addingQueue.push model
+      return this
+
+    for m in models
+      @_sendModelAdd m, options
 
     super
 
