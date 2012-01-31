@@ -10,7 +10,15 @@ your Models. All you need to do is add them to a collection created from
 `Backbone.SharedCollection` and they will be magically shared between all open
 browser instances.
 
-[This commit](https://github.com/opinsys/backbone.sharedcollection/commit/422c54c154d19f8527840334fa868f55cac33ca6)
+It works by overriding Backbone.sync. The `save` method in models and
+collections is not used. All changes are automatically saved and synced as
+models change. See usage documentation to see how to ignore this temporally.
+
+
+This library was orignally created in [Pahvi Project](https://github.com/opinsys/pahvi).
+
+
+This [commit](https://github.com/opinsys/backbone.sharedcollection/commit/422c54c154d19f8527840334fa868f55cac33ca6)
 shows how the stock TODOs example in Backbone.js is changed to use automatic
 synchronization using Backbone.SharedCollection instead of just localStorage
 persistence.
@@ -19,7 +27,7 @@ persistence.
 ## Installation
 
 Backbone.SharedCollection uses [Node.js][] and [ShareJS][] to synchronize the
-Models. So you need simple Node.js server. Like this one:
+Models. So you need a simple Node.js server. Like this one:
 
 
 ```javascript
@@ -94,19 +102,16 @@ function initCallback() {
 }
 ```
 
-Now all `set` method calls to the models will be propagated to all other
-browser instances automatically. You don't use the `save` method when the
-models are in SharedCollection. All add, destroy and set calls will be
-automatically saved and synced using ShareJS.
+Now all `set`, `destroy` and `collection.add` method calls will be propagated
+to all other browser instances automatically.
 
 ```javascript
 model.set({ foo: "bar" });
 model.destroy();
 ```
 
-If you need to make only local change to your model you can pass `{ local: true
-}` as options to `set`.
-
+If you need to make an only local change to your model you can pass `{ local:
+true }` as options to `set`. Remotes won't receive this change.
 
 ```javascript
 model.set({ foo: "bar local only" }, { local: true });
