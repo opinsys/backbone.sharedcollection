@@ -20,7 +20,7 @@ shows how the stock TODOs example in Backbone.js is changed to use automatic
 synchronization using Backbone.SharedCollection instead of just localStorage
 persistence.
 
-This library was orignally created in [Pahvi Project](https://github.com/opinsys/pahvi).
+This library was originally created in [Pahvi Project](https://github.com/opinsys/pahvi).
 
 ## Installation
 
