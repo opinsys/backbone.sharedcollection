@@ -1,30 +1,23 @@
 (function() {
-  var S4, log, optionsCbToNodeCb;
+  var S4, log;
   var __slice = Array.prototype.slice, __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
-  log = function() {
-    var msg;
-    msg = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-    msg.unshift("SharedCollection:");
-    return typeof console !== "undefined" && console !== null ? console.log.apply(console, msg) : void 0;
-  };
+  if (localStorage.debugSharedCollection && (typeof console !== "undefined" && console !== null ? console.log : void 0)) {
+    log = function() {
+      var msg;
+      msg = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      msg.unshift("SharedCollection:");
+      return console.log.apply(console, msg);
+    };
+  } else {
+    log = function() {};
+  }
 
   S4 = function() {
     return (((1 + Math.random()) * 65536) | 0).toString(16).substring(1);
   };
 
-  optionsCbToNodeCb = function(options) {
-    return function(err) {
-      if (err) {
-        return options != null ? typeof options.error === "function" ? options.error() : void 0 : void 0;
-      } else {
-        return options != null ? typeof options.success === "function" ? options.success() : void 0 : void 0;
-      }
-    };
-  };
-
   Backbone.sync = function(method, model, options) {
-    console.log("METHOD", method);
     if (method === "delete") return options.success();
   };
 
@@ -45,6 +38,7 @@
       this.captureError = __bind(this.captureError, this);
       this.classMap = {};
       if (opts.modelClasses) this.mapTypes(opts.modelClasses);
+      this._addingQueue = [];
       if (opts.sharejsDoc) this._syncDoc = opts.sharejsDoc;
       if (!(this.collectionId = opts.collectionId)) {
         throw new Error("SharedCollection needs a collectionId in options!");
@@ -74,7 +68,7 @@
       var _this = this;
       return function(err) {
         if (err) {
-          log("Sync error!", err);
+          log("Sync error! " + method + ":", err);
           return _this.trigger("syncerror", model, method, err);
         }
       };
@@ -99,18 +93,29 @@
     };
 
     SharedCollection.prototype.fetch = function(options) {
-      var cb;
+      var callbackWrapper;
       var _this = this;
       if (options == null) options = {};
+      if (this.fetched) return cb();
+      this.fetched = true;
+      callbackWrapper = function(err) {
+        if (err) {
+          return options != null ? typeof options.error === "function" ? options.error(err) : void 0 : void 0;
+        } else {
+          _this.connected = true;
+          _this._flushAddingQueue();
+          _this.trigger("connect", _this);
+          return options != null ? typeof options.success === "function" ? options.success() : void 0 : void 0;
+        }
+      };
       if (options.sharejsDoc) this._syncDoc = options.sharejsDoc;
       if (this._syncDoc.type.name !== "json") {
         throw new Error("The ShareJS document type must be 'json', not '" + this._syncDoc.type.name + "'");
       }
-      cb = optionsCbToNodeCb(options);
       if (this._syncDoc.created) {
-        this._initSyncDoc(cb);
+        this._initSyncDoc(callbackWrapper);
       } else {
-        this._loadModelsFromSyncDoc(cb);
+        this._loadModelsFromSyncDoc(callbackWrapper);
       }
       this._bindSendOperations();
       return this._syncDoc.on("remoteop", function(operations) {
@@ -126,6 +131,16 @@
         }
         return _results;
       });
+    };
+
+    SharedCollection.prototype._flushAddingQueue = function() {
+      var model, _results;
+      _results = [];
+      while (model = this._addingQueue.shift()) {
+        console.log("removing " + (model.get("name")) + " from queue");
+        _results.push(this.add(model));
+      }
+      return _results;
     };
 
     SharedCollection.prototype._initSyncDoc = function(cb) {
@@ -164,19 +179,16 @@
     SharedCollection.prototype._bindSendOperations = function() {
       var _this = this;
       this.bind("change", function(model, options) {
-        if (options != null ? options.local : void 0) console.log("LOCAL change");
         if (!(options != null ? options.local : void 0)) {
           return _this._sendModelChange(model);
         }
       });
       this.bind("add", function(model, collection, options) {
-        if (options != null ? options.local : void 0) console.log("LOCAL add");
         if (!(options != null ? options.local : void 0)) {
           return _this._sendModelAdd(model);
         }
       });
       return this.bind("destroy", function(model, collection, options) {
-        if (options != null ? options.local : void 0) console.log("LOCAL destroy");
         if (!(options != null ? options.local : void 0)) {
           return _this._sendModelDestroy(model);
         }
@@ -294,15 +306,20 @@
     };
 
     SharedCollection.prototype.add = function(models, options) {
-      var m, _i, _len;
-      if (models.length === 0) return this;
-      if (_.isArray(models)) {
-        for (_i = 0, _len = models.length; _i < _len; _i++) {
-          m = models[_i];
-          this._sendModelAdd(m, options);
+      var m, model, _i, _len;
+      if (!models || models.length === 0) return this;
+      if (!_.isArray(models)) models = [models];
+      if (!this.fetched) {
+        while (model = models.shift()) {
+          debugger;
+          console.log("Adding " + (model.get("name")) + " to queue");
+          this._addingQueue.push(model);
         }
-      } else {
-        this._sendModelAdd(models, options);
+        return this;
+      }
+      for (_i = 0, _len = models.length; _i < _len; _i++) {
+        m = models[_i];
+        this._sendModelAdd(m, options);
       }
       SharedCollection.__super__.add.apply(this, arguments);
       return this;
