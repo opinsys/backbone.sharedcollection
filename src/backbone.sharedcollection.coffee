@@ -25,6 +25,8 @@ Backbone.sync = (method, model, options) ->
 
 class Backbone.SharedCollection extends Backbone.Collection
 
+  @version = "0.1.0"
+
   model: Backbone.Model
 
   @generateGUID = ->

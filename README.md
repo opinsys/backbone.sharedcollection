@@ -161,6 +161,13 @@ See [User access controll](https://github.com/josephg/ShareJS/wiki/User-access-c
 wiki page in ShareJS documention.
 
 
+## History
+
+### 0.1.0 - 31.1.2012
+
+  * Initial release
+
 [Node.js]: http://sharejs.org/
 [ShareJS]: http://sharejs.org/
+
 
