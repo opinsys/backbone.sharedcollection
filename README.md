@@ -15,14 +15,12 @@ collections is not used. All changes are automatically saved and synced as
 models change. See usage documentation to see how to ignore this temporally.
 
 
-This library was orignally created in [Pahvi Project](https://github.com/opinsys/pahvi).
-
-
 This [commit](https://github.com/opinsys/backbone.sharedcollection/commit/422c54c154d19f8527840334fa868f55cac33ca6)
 shows how the stock TODOs example in Backbone.js is changed to use automatic
 synchronization using Backbone.SharedCollection instead of just localStorage
 persistence.
 
+This library was orignally created in [Pahvi Project](https://github.com/opinsys/pahvi).
 
 ## Installation
 
