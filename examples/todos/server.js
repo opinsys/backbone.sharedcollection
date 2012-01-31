@@ -10,6 +10,7 @@ sharejs.attach(app, {
 
 app.configure('development', function(){
   app.use(express.static(__dirname + '/public'));
+  app.use(express.static(__dirname + '/../../'));
 });
 
 

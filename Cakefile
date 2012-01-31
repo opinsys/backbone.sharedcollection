@@ -13,11 +13,9 @@ build = ->
     if code isnt 0
       console.log "Failed to compile coffee"
       return
-    exec("cp sharedcollection.js examples/todos/public/").on "exit", (code) ->
-      if code is 0
-        console.log "build ok"
-      else
-        console.log "cp failed"
+    console.log "build ok"
+    exec("cp sharedcollection.js test/public/")
+    exec("cp sharedcollection.js examples/todos/public/")
 
 task "build", ->
   build()
