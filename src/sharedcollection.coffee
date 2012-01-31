@@ -38,7 +38,6 @@ class Backbone.SharedCollection extends Backbone.Collection
     if not @collectionId = opts.collectionId
       throw new Error "SharedCollection needs a collectionId in options!"
 
-    @_syncAttributes = {}
     super
 
   handleError: (model) => (err) =>
@@ -119,23 +118,25 @@ class Backbone.SharedCollection extends Backbone.Collection
 
   _bindSendOperations: ->
 
-    @bind "change", (model) =>
-      @_sendModelChange model
+    @bind "change", (model, options) =>
+      if options?.local
+        console.log "LOCAL change"
+      @_sendModelChange model unless options?.local
 
-    @bind "add", (model) =>
-      @_sendModelAdd model
+    @bind "add", (model, collection, options) =>
+      if options?.local
+        console.log "LOCAL add"
+      @_sendModelAdd model unless options?.local
 
-    @bind "destroy", (model, options) =>
-      @_sendModelDestroy model
+    @bind "destroy", (model, collection, options) =>
+      if options?.local
+        console.log "LOCAL destroy"
+      @_sendModelDestroy model unless options?.local
 
 
   _sendModelChange: (model) ->
 
     operations = for attribute, value of model.changedAttributes()
-      if @_syncAttributes[attribute] is value
-        # We received this change. No need to resend it
-        delete @_syncAttributes[attribute]
-        continue
 
       log "SEND CHANGE: #{ model.id }: #{ attribute }: #{ value }"
       { p: [@collectionId , model.id, attribute ],  oi: value }
@@ -149,10 +150,6 @@ class Backbone.SharedCollection extends Backbone.Collection
 
 
   _sendModelAdd: (model) ->
-    if @_syncAdded is model.id
-      # We received this add. No need to resend it
-      @_syncAdded = null
-      return
 
     # Just ignore readds
     if @_syncDoc.snapshot[this.collectionId][model.id]
@@ -168,12 +165,8 @@ class Backbone.SharedCollection extends Backbone.Collection
 
   _sendModelDestroy: (model) ->
 
-    if @_syncRemoved is model.id
-      # We received this remove. No need to send it again
-      @_syncRemoved = null
-      return
-
     log "SEND REMOVE #{ model.id }"
+
     @_syncDoc.submitOp [
       p: [@collectionId , model.id]
       od: true
@@ -207,8 +200,7 @@ class Backbone.SharedCollection extends Backbone.Collection
 
     log "RECEIVE ADD #{ op.oi.id }: #{ JSON.stringify op.oi }"
 
-    @_syncAdded = op.oi.id
-    @create op.oi
+    @create op.oi, local: true
 
 
   _receiveModelDestroy: (op) ->
@@ -221,10 +213,8 @@ class Backbone.SharedCollection extends Backbone.Collection
 
     log "RECEIVE REMOVE #{ model.id }: #{ JSON.stringify modelId }"
 
-    # Prevent resending this remove
-    @_syncRemoved = model.id
 
-    model.destroy()
+    model.destroy local: true
 
     if @_syncDoc.snapshot[@collectionId][modelId]
       log "ERROR: Model exists after deletion! #{ modelId }"
@@ -243,9 +233,9 @@ class Backbone.SharedCollection extends Backbone.Collection
 
     log "RECEIVE CHANGE #{ model.id }: #{ attrName }: #{ attrValue }"
 
-    @_syncAttributes[attrName] = attrValue
-
-    model.set @_syncAttributes
+    ob = {}
+    ob[attrName] = attrValue
+    model.set ob, local: true
 
 
   add: (models) ->
