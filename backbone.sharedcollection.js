@@ -311,7 +311,6 @@
       if (!_.isArray(models)) models = [models];
       if (!this.fetched) {
         while (model = models.shift()) {
-          debugger;
           console.log("Adding " + (model.get("name")) + " to queue");
           this._addingQueue.push(model);
         }
@@ -323,21 +322,6 @@
       }
       SharedCollection.__super__.add.apply(this, arguments);
       return this;
-    };
-
-    SharedCollection.prototype.getOrCreate = function(id, Model) {
-      var model;
-      if (Model == null) Model = Backbone.Model;
-      if (model = this.get(id)) {
-        log("getOrCreate: Got!");
-        return model;
-      }
-      log("getOrCreate: creating!");
-      model = new Model({
-        id: id
-      });
-      this.add(model);
-      return model;
     };
 
     return SharedCollection;
