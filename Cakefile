@@ -15,6 +15,12 @@ build = ->
     else
       console.log "build ok"
 
+      exec("uglifyjs -o backbone.sharedcollection.min.js backbone.sharedcollection.js").on "exit", (code) ->
+        if code isnt 0
+          console.log "minification failed"
+        else
+          console.log "minification ok"
+
 task "build", ->
   build()
 

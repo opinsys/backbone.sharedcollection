@@ -295,7 +295,7 @@
 
     SharedCollection.prototype.add = function(models, options) {
       var m, _i, _len;
-      if (models.length === 0) return;
+      if (models.length === 0) return this;
       if (_.isArray(models)) {
         for (_i = 0, _len = models.length; _i < _len; _i++) {
           m = models[_i];

@@ -272,8 +272,7 @@ class Backbone.SharedCollection extends Backbone.Collection
 
   add: (models, options) ->
     if models.length is 0
-      return
-
+      return this
 
     if _.isArray models
       for m in models

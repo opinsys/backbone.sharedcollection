@@ -181,10 +181,23 @@ collection.bind("syncerror", function(model, method, err) {
 });
 ```
 
+
 ### Authentication
 
 See [User access controll](https://github.com/josephg/ShareJS/wiki/User-access-control)
 wiki page in ShareJS documention.
+
+
+## Hacking and debugging
+
+Add set `debugSharedCollection` in `localStorage` to true to enable logging.
+
+Install CoffeeScript and UglifyJS to build plain Javascript versions.
+
+    npm install -g coffee-script uglify-js
+
+Use `build` task in Cakefile to build it and `watch` task can be use to
+automatically to build it on changes.
 
 
 ## History
