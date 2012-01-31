@@ -220,7 +220,9 @@ class Backbone.SharedCollection extends Backbone.Collection
 
     log "RECEIVE ADD #{ op.oi.id }: #{ JSON.stringify op.oi }"
 
-    @create op.oi, local: true
+    @create op.oi,
+      local: true
+      remote: true
 
 
   _receiveModelDestroy: (op) ->
@@ -233,7 +235,9 @@ class Backbone.SharedCollection extends Backbone.Collection
     log "RECEIVE REMOVE #{ model.id }: #{ JSON.stringify modelId }"
 
 
-    model.destroy local: true
+    model.destroy
+      local: true
+      remote: true
 
     if @_syncDoc.snapshot[@collectionId][modelId]
       log "ERROR: Model exists after deletion! #{ modelId }"
@@ -253,19 +257,21 @@ class Backbone.SharedCollection extends Backbone.Collection
 
     ob = {}
     ob[attrName] = attrValue
-    model.set ob, local: true
+    model.set ob,
+      local: true
+      remote: true
 
 
-  add: (models) ->
+  add: (models, options) ->
     if models.length is 0
       return
 
 
     if _.isArray models
       for m in models
-        @_sendModelAdd m
+        @_sendModelAdd m, options
     else
-      @_sendModelAdd models
+      @_sendModelAdd models, options
 
     super
 
