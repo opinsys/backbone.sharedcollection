@@ -10,6 +10,11 @@ your Models. All you need to do is add them to a collection created from
 `Backbone.SharedCollection` and they will be magically shared between all open
 browser instances.
 
+[This commit](https://github.com/opinsys/backbone.sharedcollection/commit/422c54c154d19f8527840334fa868f55cac33ca6)
+shows how the stock TODOs example in Backbone.js is changed to use automatic
+synchronization using Backbone.SharedCollection instead of just localStorage
+persistence.
+
 
 ## Installation
 
@@ -52,13 +57,22 @@ For fully working app see [examples/todos](https://github.com/opinsys/backbone.s
 
 ## Usage
 
-You start by creating instance of SharedCollection and fetching it using
-ShareJS json document. You must call the fetch function always before using
-SharedCollections. That will connect it to ShareJS and will load previously
-saved models if any.
+You start by creating instance of SharedCollection with `collectionId`.
+Collection ID is used to connect different collection instances between the
+browsers.
 
 ```javascript
-var collection = new Background.SharedCollection;
+var collection = new Background.SharedCollection([], {
+    collectionId: "mycollection";
+});;
+```
+
+
+Connect the collection to ShareJS by calling `fetch` with a ShareJS document.
+You need to do this always before adding models to the collection.
+
+
+```javascript
 sharejs.open('todos', 'json', function(err, doc) {
     if (err) throw err;
     collection.fetch({
@@ -68,6 +82,7 @@ sharejs.open('todos', 'json', function(err, doc) {
     });
 });
 ```
+You can use the same ShareJS document for multiple collections.
 
 Then you can just start adding models to your collection
 
@@ -85,6 +100,7 @@ automatically saved and synced using ShareJS.
 
 ```javascript
 model.set({ foo: "bar" });
+model.destroy();
 ```
 
 If you need to make only local change to your model you can pass `{ local: true
