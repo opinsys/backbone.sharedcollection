@@ -7,8 +7,8 @@ Created by [Esa-Matti Suuronen](http://esa-matti.suuronen.org/), [Opinsys Oy](ht
 Backbone.SharedCollection is a dead simple way to add automatic synchronization
 and persistence to your Backbone.js models. You don't need to do any changes to
 your Models. All you need to do is add them to a collection created from
-`Backbone.SharedCollection` and they will be magically shared between all
-browser open instances.
+`Backbone.SharedCollection` and they will be magically shared between all open
+browser instances.
 
 
 ## Installation
