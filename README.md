@@ -2,15 +2,18 @@
 
 # Backbone.SharedCollection
 
-Backbone.SharedCollection is a dead simple way to add automatic synchronzation
-to your Backbone.js app. You don't need to do any changes to your Models. All
-you need to do is add them to a collection created from
-`Backbone.SharedCollection` and they will be magically shared between browsers.
+Created by [Esa-Matti Suuronen](http://esa-matti.suuronen.org/).
+
+Backbone.SharedCollection is a dead simple way to add automatic synchronization
+and persistence to your Backbone.js models. You don't need to do any changes to
+your Models. All you need to do is add them to a collection created from
+`Backbone.SharedCollection` and they will be magically shared between all
+browser open instances.
 
 
 ## Installation
 
-Backbone.SharedCollection uses [Node.js][] and [ShareJS][] to synchronize
+Backbone.SharedCollection uses [Node.js][] and [ShareJS][] to synchronize the
 Models. So you need simple Node.js server. Like this one:
 
 
@@ -24,6 +27,8 @@ sharejs.attach(app, {
   db:{ type: "none" }
 });
 ```
+
+For persistence options see [ShareJS documentation](https://github.com/josephg/ShareJS).
 
 In addition to Backbone.js you need also ShareJS and it's
 dependencies, Socket.io, added to your app
@@ -48,9 +53,9 @@ For fully working app see [examples/todos](https://github.com/opinsys/backbone.s
 ## Usage
 
 You start by creating instance of SharedCollection and fetching it using
-ShareJS document. You must call the fetch function always before using
+ShareJS json document. You must call the fetch function always before using
 SharedCollections. That will connect it to ShareJS and will load previously
-saved models
+saved models if any.
 
 ```javascript
 var collection = new Background.SharedCollection;
@@ -73,10 +78,10 @@ function initCallback() {
 }
 ```
 
-Now all `set` method calls to the models will propagated all other browser
-instances automatically. You don't use the `save` method when the models are in
-SharedCollection. All add, destroy and set calls will be automatically saved
-and synced using ShareJS.
+Now all `set` method calls to the models will be propagated to all other
+browser instances automatically. You don't use the `save` method when the
+models are in SharedCollection. All add, destroy and set calls will be
+automatically saved and synced using ShareJS.
 
 ```javascript
 model.set({ foo: "bar" });
@@ -95,7 +100,8 @@ Custom models in collection works just like Backbone.js documentation
 override `model` property with your custom Model class.
 
 If you want to have have multiple different Models in single SharedCollection,
-you must set type attribute of your custom models to some unique string identifier.
+then you must do a small modification to your models. Set the type property of
+your custom models to some unique string identifier.
 
 ```javascript
 window.MyModel = Backbone.Model.extend({
@@ -117,13 +123,13 @@ var collection = new Background.SharedCollection([], {
 });
 ```
 
-Only then SharedCollection can know how to deserialize your models.
+This way SharedCollection can know how to deserialize your models.
 
 ### Events
 
 Remote updates will be emited as normal `change`, `add`, `destroy` events. If
-you need to know specifically if the event came from ShareJS and not by local
-code you can check the options object of the event for `remote` property.
+you need to know if the event came from ShareJS and not by local code you can
+check the options object of the event for `remote` property.
 
 ```javascript
 model.bind("change", function(model, options) {
@@ -139,7 +145,7 @@ collection.bind("add", function(model, collection, options) {
 });
 ```
 
-Sync errors will be emited as `syncerror` events in SharedCollection instances.
+Synchronization errors will be emited as `syncerror` events in SharedCollection instances.
 
 ```javascript
 collection.bind("syncerror", function(model, method, err) {
@@ -148,6 +154,12 @@ collection.bind("syncerror", function(model, method, err) {
     alert("Failed to " + method + " " + model.id);
 });
 ```
+
+### Authentication
+
+See [User access controll](https://github.com/josephg/ShareJS/wiki/User-access-control)
+wiki page in ShareJS documention.
+
 
 [Node.js]: http://sharejs.org/
 [ShareJS]: http://sharejs.org/
