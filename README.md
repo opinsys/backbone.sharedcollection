@@ -2,7 +2,7 @@
 
 # Backbone.SharedCollection
 
-Created by [Esa-Matti Suuronen](http://esa-matti.suuronen.org/).
+Created by [Esa-Matti Suuronen](http://esa-matti.suuronen.org/), [Opinsys Oy](http://opinsys.fi/)
 
 Backbone.SharedCollection is a dead simple way to add automatic synchronization
 and persistence to your Backbone.js models. You don't need to do any changes to
