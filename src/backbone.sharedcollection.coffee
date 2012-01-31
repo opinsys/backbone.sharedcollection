@@ -288,7 +288,6 @@ class Backbone.SharedCollection extends Backbone.Collection
 
     if not @fetched
       while model = models.shift()
-        debugger
         console.log "Adding #{ model.get "name" } to queue"
         @_addingQueue.push model
       return this
