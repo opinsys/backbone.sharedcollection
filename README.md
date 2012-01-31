@@ -217,7 +217,7 @@ automatically to build it on changes.
 
 ## History
 
-### 0.1.0 - 31.1.2012
+### 0.1.0 - 3.2.2012 (unreleased)
 
   * Initial release
 
