@@ -48,7 +48,7 @@ class Backbone.SharedCollection extends Backbone.Collection
         throw new Error "Model class #{ Model::constructor.name } is missing `type` attribute."
       @classMap[Model::type] = Model
 
-  handleError: (model) => (err) =>
+  captureError: (model, method) => (err) =>
     if err
       log "Sync error!", err
       @trigger "sharejserror", err, model
@@ -152,7 +152,7 @@ class Backbone.SharedCollection extends Backbone.Collection
       throw new Error  "ERROR: snapshot has no model with id #{ model.id }"
 
     if operations.length isnt 0
-      @_syncDoc.submitOp operations, @handleError(model)
+      @_syncDoc.submitOp operations, @captureError(model, "change")
 
 
   _sendModelAdd: (model) ->
@@ -170,8 +170,8 @@ class Backbone.SharedCollection extends Backbone.Collection
 
     @_syncDoc.submitOp [
       p: [@collectionId , model.id]
-      oi: model.toJSON()
-    ], @handleError(model)
+      oi: attrs
+    ], @captureError(model, "add")
 
 
   _sendModelDestroy: (model) ->
@@ -181,7 +181,7 @@ class Backbone.SharedCollection extends Backbone.Collection
     @_syncDoc.submitOp [
       p: [@collectionId , model.id]
       od: true
-    ], @handleError(model)
+    ], @captureError(model, "destroy")
 
 
 
