@@ -55,7 +55,7 @@ class Backbone.SharedCollection extends Backbone.Collection
 
   captureError: (model, method) => (err) =>
     if err
-      log "Sync error!", err
+      log "Sync error! #{ method }:", err
       @trigger "syncerror", model, method, err
 
   create: (model, options={}) ->
@@ -147,18 +147,12 @@ class Backbone.SharedCollection extends Backbone.Collection
   _bindSendOperations: ->
 
     @bind "change", (model, options) =>
-      if options?.local
-        console.log "LOCAL change"
       @_sendModelChange model unless options?.local
 
     @bind "add", (model, collection, options) =>
-      if options?.local
-        console.log "LOCAL add"
       @_sendModelAdd model unless options?.local
 
     @bind "destroy", (model, collection, options) =>
-      if options?.local
-        console.log "LOCAL destroy"
       @_sendModelDestroy model unless options?.local
 
 
