@@ -69,7 +69,8 @@ var collection = new Background.SharedCollection([], {
 
 
 Connect the collection to ShareJS by calling `fetch` with a ShareJS document.
-You need to do this always before adding models to the collection.
+If you try to add models to the collection before this they will put into a
+queue and are really added right after you call the `fetch` method.
 
 
 ```javascript
@@ -153,9 +154,11 @@ This way SharedCollection can know how to deserialize your custom models.
 
 ### Events
 
-Remote updates will be emited as normal `change`, `add`, `destroy` events. If
-you need to know if the event came from ShareJS and not by local code you can
-check the options object of the event for `remote` property.
+#### Updates - `add`, `change` and `destroy`
+
+Remote updates will be emited as normal Backbone.js `change`, `add`, `destroy`
+events. If you need to know whether the event came from ShareJS and not by local
+code, you can check the options object of the event for `remote` property.
 
 ```javascript
 model.bind("change", function(model, options) {
@@ -170,6 +173,13 @@ collection.bind("add", function(model, collection, options) {
     }
 });
 ```
+
+#### `connect`
+
+When collection is properly connected to ShareJS a `connect` event will be
+emitted. You can also use success callback in `fetch` method for this.
+
+#### `syncerror`
 
 Synchronization errors will be emited as `syncerror` events in SharedCollection instances.
 
