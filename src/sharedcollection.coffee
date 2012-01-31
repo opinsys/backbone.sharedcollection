@@ -31,7 +31,9 @@ class Backbone.SharedCollection extends Backbone.Collection
     S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4()
 
   constructor: (models, opts={}) ->
-    @modelTypes = opts.modelTypes or {}
+    @classMap = {}
+    @mapTypes opts.modelClasses if opts.modelClasses
+
     if opts.sharejsDoc
       @_syncDoc = opts.sharejsDoc
 
@@ -39,6 +41,12 @@ class Backbone.SharedCollection extends Backbone.Collection
       throw new Error "SharedCollection needs a collectionId in options!"
 
     super
+
+  mapTypes: (modelClasses) ->
+    for Model in modelClasses
+      if not Model::type
+        throw new Error "Model class #{ Model::constructor.name } is missing `type` attribute."
+      @classMap[Model::type] = Model
 
   handleError: (model) => (err) =>
     if err
@@ -49,7 +57,7 @@ class Backbone.SharedCollection extends Backbone.Collection
 
     if not (model instanceof Backbone.Model)
       attrs = model
-      Model = @modelTypes[attrs.type] or @model
+      Model = @classMap[attrs.type] or @model
       model = new Model attrs,
         collection: this
       if model.validate and not model._performValidation(attrs, options)
