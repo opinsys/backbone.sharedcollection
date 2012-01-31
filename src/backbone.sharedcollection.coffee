@@ -46,8 +46,14 @@ class Backbone.SharedCollection extends Backbone.Collection
 
   mapTypes: (modelClasses) ->
     for Model in modelClasses
+
       if not Model::type
         throw new Error "Model class #{ Model::constructor.name } is missing `type` attribute."
+
+      if existing = @classMap[Model::type]
+        if existing isnt Model
+          throw new Error "Type id collision. #{ Model::constructor.name } and #{ existing::constructor.name } have the same type-property!"
+
       @classMap[Model::type] = Model
 
   captureError: (model, method) => (err) =>

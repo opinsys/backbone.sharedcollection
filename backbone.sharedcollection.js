@@ -53,12 +53,17 @@
     }
 
     SharedCollection.prototype.mapTypes = function(modelClasses) {
-      var Model, _i, _len, _results;
+      var Model, existing, _i, _len, _results;
       _results = [];
       for (_i = 0, _len = modelClasses.length; _i < _len; _i++) {
         Model = modelClasses[_i];
         if (!Model.prototype.type) {
           throw new Error("Model class " + Model.prototype.constructor.name + " is missing `type` attribute.");
+        }
+        if (existing = this.classMap[Model.prototype.type]) {
+          if (existing !== Model) {
+            throw new Error("Type id collision. " + Model.prototype.constructor.name + " and " + existing.prototype.constructor.name + " have the same type-property!");
+          }
         }
         _results.push(this.classMap[Model.prototype.type] = Model);
       }
