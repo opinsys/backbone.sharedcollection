@@ -25,7 +25,7 @@ Backbone.sync = (method, model, options) ->
 
 class Backbone.SharedCollection extends Backbone.Collection
 
-  model: Backbone.SharedModel
+  model: Backbone.Model
 
   @generateGUID = ->
     S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4()
