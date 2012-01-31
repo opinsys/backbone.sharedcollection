@@ -1,10 +1,14 @@
 
-log = (msg...) ->
-  msg.unshift "SharedCollection:"
-  console?.log.apply console, msg
+
+if localStorage.debugSharedCollection and console?.log
+  log = (msg...) ->
+    msg.unshift "SharedCollection:"
+    console.log.apply console, msg
+else
+  log = ->
+
 
 S4 = -> (((1 + Math.random()) * 65536) | 0).toString(16).substring(1)
-
 
 # Convert Backone.js style options object based callbacks to Node.js style
 # single function callbacks used in ShareJS
