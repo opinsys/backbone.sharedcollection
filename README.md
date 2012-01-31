@@ -103,7 +103,7 @@ window.MyModel = Backbone.Model.extend({
     type: "mymodel"
 
     hasBar: function() {
-        !! return this.get "bar"
+        !! return this.get("bar");
     }
 });
 
