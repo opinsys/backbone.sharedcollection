@@ -63,7 +63,7 @@ browsers.
 
 ```javascript
 var collection = new Background.SharedCollection([], {
-    collectionId: "mycollection";
+    collectionId: "mycollection"
 });;
 ```
 
@@ -111,6 +111,8 @@ If you need to make only local change to your model you can pass `{ local: true
 model.set({ foo: "bar local only" }, { local: true });
 ```
 
+### Custom Models
+
 Custom models in collection works just like Backbone.js documentation
 [states](http://documentcloud.github.com/backbone/#Collection-model). Just
 override `model` property with your custom Model class.
@@ -124,6 +126,7 @@ window.MyModel = Backbone.Model.extend({
 
     type: "mymodel"
 
+    // Some custom method...
     hasBar: function() {
         !! return this.get("bar");
     }
@@ -135,11 +138,12 @@ and pass those to the shared collection
 
 ```javascript
 var collection = new Background.SharedCollection([], {
+    collectionId: "mycollection",
     modelClasses: [ MyModel ]
 });
 ```
 
-This way SharedCollection can know how to deserialize your models.
+This way SharedCollection can know how to deserialize your custom models.
 
 ### Events
 
