@@ -174,12 +174,12 @@ collection.bind("add", function(model, collection, options) {
 });
 ```
 
-#### `connect`
+#### On connected - `connect`
 
 When collection is properly connected to ShareJS a `connect` event will be
 emitted. You can also use success callback in `fetch` method for this.
 
-#### `syncerror`
+#### Errors - `syncerror`
 
 Synchronization errors will be emited as `syncerror` events in SharedCollection instances.
 
