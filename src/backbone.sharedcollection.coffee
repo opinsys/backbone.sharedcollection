@@ -91,6 +91,7 @@ class Backbone.SharedCollection extends Backbone.Collection
       if err
         options?.error? err
       else
+        @trigger "syncload"
         @connected = true
         @_flushAddingQueue()
         @trigger "connect", this
