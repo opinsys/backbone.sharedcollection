@@ -1,6 +1,9 @@
 (function() {
-  var S4, log;
-  var __slice = Array.prototype.slice, __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+  var S4, log,
+    __slice = Array.prototype.slice,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    __hasProp = Object.prototype.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
   if (localStorage.debugSharedCollection && (typeof console !== "undefined" && console !== null ? console.log : void 0)) {
     log = function() {
@@ -21,9 +24,9 @@
     if (method === "delete") return options.success();
   };
 
-  Backbone.SharedCollection = (function() {
+  Backbone.SharedCollection = (function(_super) {
 
-    __extends(SharedCollection, Backbone.Collection);
+    __extends(SharedCollection, _super);
 
     SharedCollection.version = "0.1.0";
 
@@ -39,7 +42,7 @@
       this.classMap = {};
       if (opts.modelClasses) this.mapTypes(opts.modelClasses);
       this._addingQueue = [];
-      if (opts.sharejsDoc) this._syncDoc = opts.sharejsDoc;
+      if (opts.sharejsDoc) this._setShareJSDoc(opts.sharejsDoc);
       if (!(this.collectionId = opts.collectionId)) {
         throw new Error("SharedCollection needs a collectionId in options!");
       }
@@ -69,7 +72,7 @@
       return function(err) {
         if (err) {
           log("Sync error! " + method + ":", err);
-          return _this.trigger("syncerror", model, method, err);
+          return model.trigger("syncerror", model, method, err);
         }
       };
     };
@@ -92,9 +95,17 @@
       return model;
     };
 
-    SharedCollection.prototype.fetch = function(options) {
-      var callbackWrapper;
+    SharedCollection.prototype._setShareJSDoc = function(doc) {
       var _this = this;
+      this._syncDoc = doc;
+      return doc.connection.on("disconnect", function() {
+        return _this.trigger("disconnect", _this, doc);
+      });
+    };
+
+    SharedCollection.prototype.fetch = function(options) {
+      var callbackWrapper,
+        _this = this;
       if (options == null) options = {};
       if (this.fetched) return cb();
       this.fetched = true;
@@ -102,22 +113,25 @@
         if (err) {
           return options != null ? typeof options.error === "function" ? options.error(err) : void 0 : void 0;
         } else {
+          _this.trigger("syncload");
           _this.connected = true;
           _this._flushAddingQueue();
           _this.trigger("connect", _this);
           return options != null ? typeof options.success === "function" ? options.success() : void 0 : void 0;
         }
       };
-      if (options.sharejsDoc) this._syncDoc = options.sharejsDoc;
+      if (options.sharejsDoc) this._setShareJSDoc(options.sharejsDoc);
       if (this._syncDoc.type.name !== "json") {
         throw new Error("The ShareJS document type must be 'json', not '" + this._syncDoc.type.name + "'");
       }
-      if (this._syncDoc.created) {
-        this._initSyncDoc(callbackWrapper);
-      } else {
-        this._loadModelsFromSyncDoc(callbackWrapper);
-      }
       this._bindSendOperations();
+      this._initSyncDoc(function(err) {
+        if (err) return callbackWrapper(err);
+        return _this._initCollection(function(err) {
+          if (err) return callbackWrapper(err);
+          return _this._loadModelsFromSyncDoc(callbackWrapper);
+        });
+      });
       return this._syncDoc.on("remoteop", function(operations) {
         var op, _i, _len, _results;
         _results = [];
@@ -137,21 +151,30 @@
       var model, _results;
       _results = [];
       while (model = this._addingQueue.shift()) {
-        console.log("removing " + (model.get("name")) + " from queue");
         _results.push(this.add(model));
       }
       return _results;
     };
 
     SharedCollection.prototype._initSyncDoc = function(cb) {
-      var ob;
-      log("Creating new sync doc with " + this.collectionId);
-      ob = {};
-      ob[this.collectionId] = {};
+      if (!this._syncDoc.created) return cb();
+      if (this._syncDoc.snapshot) return cb();
+      log("Creating new sync doc");
       return this._syncDoc.submitOp([
         {
           p: [],
-          oi: ob
+          oi: {}
+        }
+      ], cb);
+    };
+
+    SharedCollection.prototype._initCollection = function(cb) {
+      if (this._syncDoc.snapshot[this.collectionId]) return cb();
+      log("Adding new collection to syncdoc: " + this.collectionId);
+      return this._syncDoc.submitOp([
+        {
+          p: [this.collectionId],
+          oi: {}
         }
       ], cb);
     };
@@ -220,13 +243,15 @@
     };
 
     SharedCollection.prototype._sendModelAdd = function(model, options) {
-      var attrs;
+      var attrs, _ref;
       if (!model.id) {
         model.set({
           id: SharedCollection.generateGUID()
         });
       }
-      if (this._syncDoc.snapshot[this.collectionId][model.id]) return;
+      if ((_ref = this._syncDoc.snapshot[this.collectionId]) != null ? _ref[model.id] : void 0) {
+        return;
+      }
       log("SEND ADD " + model.id + ": " + (JSON.stringify(model.toJSON())));
       attrs = model.toJSON();
       if (model.type) {
@@ -326,6 +351,6 @@
 
     return SharedCollection;
 
-  })();
+  })(Backbone.Collection);
 
 }).call(this);
