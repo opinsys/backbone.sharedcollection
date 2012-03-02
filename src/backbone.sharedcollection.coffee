@@ -34,7 +34,7 @@ class Backbone.SharedCollection extends Backbone.Collection
     @_addingQueue = []
 
     if opts.sharejsDoc
-      @_syncDoc = opts.sharejsDoc
+      @_setShareJSDoc opts.sharejsDoc
 
     if not @collectionId = opts.collectionId
       throw new Error "SharedCollection needs a collectionId in options!"
@@ -74,6 +74,11 @@ class Backbone.SharedCollection extends Backbone.Collection
     @add model, options
     return model
 
+  _setShareJSDoc: (doc) ->
+    @_syncDoc = doc
+    doc.connection.on "disconnect", =>
+      @trigger "disconnect", this, doc
+
   fetch: (options={}) ->
     # Fetch can be called only once
     if @fetched
@@ -91,7 +96,7 @@ class Backbone.SharedCollection extends Backbone.Collection
         options?.success?()
 
     if options.sharejsDoc
-      @_syncDoc = options.sharejsDoc
+      @_setShareJSDoc options.sharejsDoc
 
     if @_syncDoc.type.name isnt "json"
       throw new Error "The ShareJS document type must be 'json', not '#{ @_syncDoc.type.name }'"
