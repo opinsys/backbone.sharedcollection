@@ -29,8 +29,8 @@ factory = (Backbone) ->
 
       @_addingQueue = []
 
-      if opts.sharejsDoc
-        @_setShareJSDoc opts.sharejsDoc
+      if opts.doc
+        @setDoc opts.doc
 
       if not @collectionId = opts.collectionId
         throw new Error "SharedCollection needs a collectionId in options!"
@@ -71,7 +71,7 @@ factory = (Backbone) ->
       @add model, options
       return model
 
-    _setShareJSDoc: (doc) ->
+    setDoc: (doc) ->
       @_syncDoc = doc
       doc.connection.on "disconnect", =>
         @trigger "disconnect", this, doc
@@ -93,8 +93,8 @@ factory = (Backbone) ->
           @trigger "connect", this
           options?.success?()
 
-      if options.sharejsDoc
-        @_setShareJSDoc options.sharejsDoc
+      if options.doc
+        @setDoc options.doc
 
       if @_syncDoc.type.name isnt "json"
         throw new Error "The ShareJS document type must be 'json', not '#{ @_syncDoc.type.name }'"

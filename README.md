@@ -83,8 +83,8 @@ queue and are really added right after you call the `fetch` method.
 ```javascript
 sharejs.open('todos', 'json', function(err, doc) {
     if (err) throw err;
+    collection.setDoc(doc);
     collection.fetch({
-        sharejsDoc: doc,
         success: initCallback,
         error: displayErrorCallback
     });

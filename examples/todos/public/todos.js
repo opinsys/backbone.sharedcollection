@@ -175,7 +175,8 @@ $(function(){
 
       sharejs.open('todos', 'json', function(err, doc) {
         if (err) throw err;
-        Todos.fetch({ sharejsDoc: doc });
+        Todos.setDoc(doc);
+        Todos.fetch();
       });
     },
 
