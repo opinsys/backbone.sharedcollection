@@ -128,9 +128,6 @@ factory = (Backbone) ->
 
     _initSyncDoc: (cb) ->
 
-      if not @_syncDoc.created
-        return cb()
-
       if @_syncDoc.snapshot
         return cb()
 
