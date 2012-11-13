@@ -32,10 +32,19 @@ factory = (Backbone) ->
       if opts.doc
         @setDoc opts.doc
 
-      if not @collectionId = opts.collectionId
-        throw new Error "SharedCollection needs a collectionId in options!"
+      @_collectionId = opts.collectionId
 
       super
+
+    # Get id with coll.collectionId() set it with coll.collectionId(id)
+    collectionId: (id) ->
+      if id
+        @_collectionId = id
+        return
+
+      if not @_collectionId
+        throw new Error "SharedCollection needs a collectionId in options!"
+      return @_collectionId
 
     mapTypes: (modelClasses) ->
       for Model in modelClasses
@@ -118,7 +127,7 @@ factory = (Backbone) ->
 
           # If first part in operation path is @collectionId this operation is a
           # change to some of our models
-          if op.p[0] is @collectionId
+          if op.p[0] is @collectionId()
             @parse op
 
 
@@ -138,24 +147,24 @@ factory = (Backbone) ->
       ], cb
 
     _initCollection: (cb) ->
-      if @_syncDoc.snapshot[@collectionId]
+      if @_syncDoc.snapshot[@collectionId()]
         return cb()
 
-      log "Adding new collection to syncdoc: #{ @collectionId }"
+      log "Adding new collection to syncdoc: #{ @collectionId() }"
       @_syncDoc.submitOp [
-        p: [@collectionId]
+        p: [@collectionId()]
         oi: {}
       ], cb
 
     _loadModelsFromSyncDoc: (cb=->) ->
-      if modelMap = @_syncDoc.snapshot[@collectionId]
+      if modelMap = @_syncDoc.snapshot[@collectionId()]
         for id, json of modelMap
           @create json
         cb()
       else
-        log "Creating collection #{ @collectionId }"
+        log "Creating collection #{ @collectionId() }"
         @_syncDoc.submitOp [
-          p: [@collectionId]
+          p: [@collectionId()]
           oi: {}
         ], cb
 
@@ -178,10 +187,10 @@ factory = (Backbone) ->
       operations = for attribute, value of model.changedAttributes()
 
         log "SEND CHANGE: #{ model.id }: #{ attribute }: #{ value }"
-        { p: [@collectionId , model.id, attribute ],  oi: value }
+        { p: [@collectionId() , model.id, attribute ],  oi: value }
 
 
-      if not @_syncDoc.snapshot[@collectionId][model.id]
+      if not @_syncDoc.snapshot[@collectionId()][model.id]
         throw new Error  "ERROR: snapshot has no model with id #{ model.id }"
 
       if operations.length isnt 0
@@ -196,7 +205,7 @@ factory = (Backbone) ->
         model.set id: SharedCollection.generateGUID()
 
       # Just ignore readds
-      if @_syncDoc.snapshot[this.collectionId]?[model.id]
+      if @_syncDoc.snapshot[this.collectionId()]?[model.id]
         return
 
 
@@ -212,7 +221,7 @@ factory = (Backbone) ->
         attrs.__type = model.type
 
       @_syncDoc.submitOp [
-        p: [@collectionId , model.id]
+        p: [@collectionId() , model.id]
         oi: attrs
       ], @captureError(model, "add")
 
@@ -222,7 +231,7 @@ factory = (Backbone) ->
       log "SEND REMOVE #{ model.id }"
 
       @_syncDoc.submitOp [
-        p: [@collectionId , model.id]
+        p: [@collectionId() , model.id]
         od: true
       ], @captureError(model, "destroy")
 
@@ -230,7 +239,7 @@ factory = (Backbone) ->
 
     parse: (op) ->
 
-      # If path has form of [ @collectionId , modelId ] it must be add or remove
+      # If path has form of [ @collectionId() , modelId ] it must be add or remove
       if op.p.length is 2
 
         # We have insert object
@@ -273,7 +282,7 @@ factory = (Backbone) ->
         local: true
         remote: true
 
-      if @_syncDoc.snapshot[@collectionId][modelId]
+      if @_syncDoc.snapshot[@collectionId()][modelId]
         log "ERROR: Model exists after deletion! #{ modelId }"
 
 
